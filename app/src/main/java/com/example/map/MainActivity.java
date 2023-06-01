@@ -235,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
             public void onClick(View v) {
                 LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
                 for (Point point : points) {
+                    //判断是否在范围内
                     if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
 
                         if (!isDrawing) {
@@ -280,11 +281,12 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
 
                             });
                             t.start();
+                            Toast.makeText(MainActivity.this, "借车成功!", Toast.LENGTH_SHORT).show();
                             point.setQuantity(point.getQuantity() - 1);
                             trackPoints = new ArrayList<>();
                             isDrawing=true;
                         } else {
-                            //这个状态是正在骑行，所以将text设置为解锁
+                            //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
                             drawButton.setText("解锁");
                             repairButton.setVisibility(View.GONE);
                             //获取地点
@@ -313,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                                 }
                             });
                             t.start();
+                            Toast.makeText(MainActivity.this, "还车成功!", Toast.LENGTH_SHORT).show();
                             point.setQuantity(point.getQuantity() + 1);
                             // 执行停止轨迹的操作
                             if (polyline != null) {
@@ -351,6 +354,61 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         repairButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
+                for (Point point : points) {
+                    //判断是否在范围内
+                    if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
+                        //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
+                        drawButton.setText("解锁");
+                        repairButton.setVisibility(View.GONE);
+                        //获取地点
+                        String currentLocation = point.getTitle();
+                        //获取骑车用户信息
+                        String userId = loginUsername;
+                        //获取时间戳
+                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+                        String date = df.format(new Date());
+                        String repairBikeUrl = "http://172.25.104.246:8030/repairBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                        Thread t = new Thread(() -> {
+                            try{
+                                OkHttpClient client = new OkHttpClient();
+                                RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
+                                Request request = new Request.Builder()
+                                        .url(repairBikeUrl)
+                                        .post(body)
+                                        .build();
+                                try(Response response = client.newCall(request).execute()){
+                                    //只是调用接口
+                                }catch (Exception e){
+                                    System.out.println(e);
+                                }
+                            }catch (Exception e){
+                                System.out.println(e);
+                            }
+                        });
+                        t.start();
+                        Toast.makeText(MainActivity.this, "报修成功!", Toast.LENGTH_SHORT).show();
+                        // 执行停止轨迹的操作
+                        if (polyline != null) {
+                            polyline.remove();
+                            polyline=null;
+                        }
+                        isDrawing=false;
+
+                        // 更新标记和信息窗口
+                        Marker marker = getMarkerByPoint(point);
+                        if (marker != null) {
+                            marker.setSnippet("数量：" + point.getQuantity());
+                            marker.showInfoWindow();
+                        }
+                        isPointProcessed = true;
+                        break; // 结束循环，只处理第一个满足条件的点
+                    }
+                }
+                // 如果不在任何点附近
+                if (!isPointProcessed) {
+                    Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
+                }
 
             }
         });
