@@ -47,15 +47,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
@@ -90,7 +94,9 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
     private boolean isPointProcessed = false;
 
 
+    //获取登录信息
     private TextView loginuser;
+    private String loginUsername;
 
 
     //自行车信息保存列表
@@ -104,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
 
         // 接收参数
         Intent intent = this.getIntent();
-        String loginUsername = intent.getStringExtra("username");
+        loginUsername = intent.getStringExtra("username");
         loginuser = findViewById(R.id.hello);
         loginuser.setText("欢迎！"+loginUsername);
 
@@ -154,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     .title("共享单车西门")
                     .snippet("数量：" + westNum)
                     .draggable(true));
-            Point point1 = new Point(latLng1, "共享单车西门", westNum);
+            Point point1 = new Point(latLng1, "西门", westNum);
             point1.setMarker(marker1);
             points.add(point1);
             markers.add(marker1);
@@ -165,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     .title("共享单车体育场")
                     .snippet("数量：" + stadiumNum)
                     .draggable(true));
-            Point point2 = new Point(latLng2, "共享单车体育场", stadiumNum);
+            Point point2 = new Point(latLng2, "体育场", stadiumNum);
             point1.setMarker(marker2);
             points.add(point2);
             markers.add(marker2);
@@ -176,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     .title("共享单车南门")
                     .snippet("数量：" + southNum)
                     .draggable(true));
-            Point point3 = new Point(latLng3, "共享单车南门", southNum);
+            Point point3 = new Point(latLng3, "南门", southNum);
             point1.setMarker(marker3);
             points.add(point3);
             markers.add(marker3);
@@ -187,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     .title("共享单车东一门")
                     .snippet("数量：" + east1Num)
                     .draggable(true));
-            Point point4 = new Point(latLng4, "共享单车东一门", east1Num);
+            Point point4 = new Point(latLng4, "东一门", east1Num);
             point1.setMarker(marker4);
             points.add(point4);
             markers.add(marker4);
@@ -198,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     .title("共享单车东二门")
                     .snippet("数量：" + east2Num)
                     .draggable(true));
-            Point point5 = new Point(latLng1, "共享单车东二门", east2Num);
+            Point point5 = new Point(latLng1, "东二门", east2Num);
             point1.setMarker(marker5);
             points.add(point5);
             markers.add(marker5);
@@ -229,7 +235,42 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
 
                         if (!isDrawing) {
+                            //这个状态是还没有解锁，把按钮上的内容变成停车
                             drawButton.setText("停车");
+                            //借走车辆
+                            String currentLocation = point.getTitle();
+                            int bicycleId = 0;
+                            String userId = loginUsername;
+                            for(BikeInfo bikeInfo:bikeInfos){
+                                System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
+                                if(bikeInfo.getCurrentLocation().equals(currentLocation) && bikeInfo.isAvaliable()){
+                                    bicycleId = bikeInfo.getId();
+                                    break;
+                                }
+                            }
+                            int finalBicycleId = bicycleId;
+                            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+                            String date = df.format(new Date());
+                            String rideBikeUrl = "http://172.25.104.246:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
+                            Thread t = new Thread(() -> {
+                                try {
+                                    OkHttpClient client = new OkHttpClient();
+                                    RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
+                                    Request request = new Request.Builder()
+                                            .url(rideBikeUrl)
+                                            .post(body)
+                                            .build();
+                                    try(Response response = client.newCall(request).execute()){
+
+                                    }catch (Exception e){
+                                        System.out.println(e);
+                                    }
+                                }catch (Exception e){
+                                    System.out.println(e);
+                                }
+
+                            });
+                            t.start();
                             point.setQuantity(point.getQuantity() - 1);
                             trackPoints = new ArrayList<>();
                             isDrawing=true;
