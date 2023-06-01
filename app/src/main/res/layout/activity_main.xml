@@ -48,7 +48,15 @@
             android:id="@+id/btn_center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="居中定位" />
+            android:text="居中定位"
+            android:layout_marginRight="16dp"/>
+
+        <Button
+            android:id="@+id/btn_repair"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:text="报修" />
 
     </LinearLayout>
 

@@ -79,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
     private Button drawButton;
     private Button centerButton;
 
+    private Button repairButton;
+
     private boolean isDrawing = false;
     private boolean isCentered = false;
     private List<LatLng> trackPoints;
@@ -123,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         // 初始化按钮
         drawButton = findViewById(R.id.btn_draw);
         centerButton = findViewById(R.id.btn_center);
+        repairButton = findViewById(R.id.btn_repair);
 
         // 请求定位权限
         try {
@@ -237,18 +240,24 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                         if (!isDrawing) {
                             //这个状态是还没有解锁，把按钮上的内容变成停车
                             drawButton.setText("停车");
+                            //显示报修按钮
+                            repairButton.setVisibility(View.VISIBLE);
+                            //获取借车人信息
+                            String userId = loginUsername;
                             //借走车辆
+                            //获取地点
                             String currentLocation = point.getTitle();
                             int bicycleId = 0;
-                            String userId = loginUsername;
                             for(BikeInfo bikeInfo:bikeInfos){
-                                System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
+                                //System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
                                 if(bikeInfo.getCurrentLocation().equals(currentLocation) && bikeInfo.isAvaliable()){
                                     bicycleId = bikeInfo.getId();
                                     break;
+                                    //获取第一个符合条件的车
                                 }
                             }
                             int finalBicycleId = bicycleId;
+                            //获取时间戳
                             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                             String date = df.format(new Date());
                             String rideBikeUrl = "http://172.25.104.246:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
@@ -261,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                                             .post(body)
                                             .build();
                                     try(Response response = client.newCall(request).execute()){
-
+                                        //只是调用接口
                                     }catch (Exception e){
                                         System.out.println(e);
                                     }
@@ -275,14 +284,41 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             trackPoints = new ArrayList<>();
                             isDrawing=true;
                         } else {
+                            //这个状态是正在骑行，所以将text设置为解锁
                             drawButton.setText("解锁");
+                            repairButton.setVisibility(View.GONE);
+                            //获取地点
+                            String currentLocation = point.getTitle();
+                            //获取骑车用户信息
+                            String userId = loginUsername;
+                            //获取时间戳
+                            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+                            String date = df.format(new Date());
+                            String returnBikeUrl = "http://172.25.104.246:8030/returnBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                            Thread t = new Thread(() -> {
+                                try{
+                                    OkHttpClient client = new OkHttpClient();
+                                    RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
+                                    Request request = new Request.Builder()
+                                            .url(returnBikeUrl)
+                                            .post(body)
+                                            .build();
+                                    try(Response response = client.newCall(request).execute()){
+                                        //只是调用接口
+                                    }catch (Exception e){
+                                        System.out.println(e);
+                                    }
+                                }catch (Exception e){
+                                    System.out.println(e);
+                                }
+                            });
+                            t.start();
                             point.setQuantity(point.getQuantity() + 1);
                             // 执行停止轨迹的操作
                             if (polyline != null) {
                                 polyline.remove();
                                 polyline=null;
                             }
-
                             isDrawing=false;
                         }
 
@@ -309,6 +345,13 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
             @Override
             public void onClick(View v) {
                 centerMap();
+            }
+        });
+
+        repairButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
