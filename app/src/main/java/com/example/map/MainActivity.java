@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,7 +26,6 @@ import com.amap.api.location.DPoint;
 import com.amap.api.maps2d.AMap;
 import com.amap.api.maps2d.CameraUpdateFactory;
 import com.amap.api.maps2d.MapView;
-import com.amap.api.maps2d.MapsInitializer;
 import com.amap.api.maps2d.model.BitmapDescriptor;
 import com.amap.api.maps2d.model.BitmapDescriptorFactory;
 import com.amap.api.maps2d.model.LatLng;
@@ -44,7 +42,6 @@ import com.amap.api.services.core.ServiceSettings;
 import com.example.map.entity.BikeInfo;
 import com.example.map.entity.Point;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.text.SimpleDateFormat;
@@ -54,7 +51,6 @@ import java.util.List;
 import android.util.Log;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -143,15 +139,15 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
             bikeInfos = info;
             System.out.println(bikeInfos);
             for(BikeInfo bikeInfo:bikeInfos){
-                if (bikeInfo.getCurrentLocation().equals("西门") && bikeInfo.isAvaliable()){
+                if (bikeInfo.getCurrentLocation().equals("西门") && bikeInfo.isAvailable()){
                     westNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("体育场") && bikeInfo.isAvaliable()){
+                }else if(bikeInfo.getCurrentLocation().equals("体育场") && bikeInfo.isAvailable()){
                     stadiumNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("南门") && bikeInfo.isAvaliable()){
+                }else if(bikeInfo.getCurrentLocation().equals("南门") && bikeInfo.isAvailable()){
                     southNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("东一门") && bikeInfo.isAvaliable()){
+                }else if(bikeInfo.getCurrentLocation().equals("东一门") && bikeInfo.isAvailable()){
                     east1Num ++;
-                }else if(bikeInfo.getCurrentLocation().equals("东二门") && bikeInfo.isAvaliable()){
+                }else if(bikeInfo.getCurrentLocation().equals("东二门") && bikeInfo.isAvailable()){
                     east2Num ++;
                 }
             }
@@ -251,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             int bicycleId = 0;
                             for(BikeInfo bikeInfo:bikeInfos){
                                 //System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
-                                if(bikeInfo.getCurrentLocation().equals(currentLocation) && bikeInfo.isAvaliable()){
+                                if(bikeInfo.getCurrentLocation().equals(currentLocation) && bikeInfo.isAvailable()){
                                     bicycleId = bikeInfo.getId();
                                     break;
                                     //获取第一个符合条件的车

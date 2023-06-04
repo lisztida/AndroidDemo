@@ -3,17 +3,17 @@ package com.example.map.entity;
 public class BikeInfo {
     private int id;
     private String currentLocation;
-    private boolean avaliable;
+    private boolean available;
 
     private boolean underRepair;
 
     public BikeInfo() {
     }
 
-    public BikeInfo(int id, String currentLocation, boolean avaliable, boolean underRepair) {
+    public BikeInfo(int id, String currentLocation, boolean available, boolean underRepair) {
         this.id = id;
         this.currentLocation = currentLocation;
-        this.avaliable = avaliable;
+        this.available = available;
         this.underRepair = underRepair;
     }
 
@@ -38,12 +38,12 @@ public class BikeInfo {
         this.currentLocation = currentLocation;
     }
 
-    public boolean isAvaliable() {
-        return avaliable;
+    public boolean isAvailable() {
+        return available;
     }
 
-    public void setAvaliable(boolean avaliable) {
-        this.avaliable = avaliable;
+    public void setAvailable(boolean available) {
+        this.available = available;
     }
 
     public boolean isUnderRepair() {
