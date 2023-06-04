@@ -1,22 +1,22 @@
 package com.example.map.entity;
 
+import androidx.annotation.NonNull;
+
 public class BikeInfo {
     private int id;
-    private String currentLocation;
+    private BikePosition currentLocation;
     private boolean available;
 
     private boolean underRepair;
 
-    public BikeInfo() {
-    }
-
-    public BikeInfo(int id, String currentLocation, boolean available, boolean underRepair) {
+    public BikeInfo(int id, BikePosition currentLocation, boolean available, boolean underRepair) {
         this.id = id;
         this.currentLocation = currentLocation;
         this.available = available;
         this.underRepair = underRepair;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BikeInfo{}";
@@ -30,11 +30,11 @@ public class BikeInfo {
         this.id = id;
     }
 
-    public String getCurrentLocation() {
+    public BikePosition getCurrentLocation() {
         return currentLocation;
     }
 
-    public void setCurrentLocation(String currentLocation) {
+    public void setCurrentLocation(BikePosition currentLocation) {
         this.currentLocation = currentLocation;
     }
 

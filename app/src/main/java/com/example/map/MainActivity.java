@@ -40,6 +40,7 @@ import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.amap.api.services.core.ServiceSettings;
 import com.example.map.entity.BikeInfo;
+import com.example.map.entity.BikePosition;
 import com.example.map.entity.Point;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -100,6 +101,33 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
     //自行车信息保存列表
     private List<BikeInfo> bikeInfos = new ArrayList<>();
 
+    private void updateMap() {
+        Log.i("nb", Thread.currentThread().getName());
+
+        int[] bikeNumList = new int[BikePosition.values().length];
+        System.out.println(bikeInfos);
+        for (BikeInfo bikeInfo : bikeInfos) {
+            bikeNumList[bikeInfo.getCurrentLocation().ordinal()]++;
+        }
+
+        for (BikePosition bikePosition : BikePosition.values()) {
+            LatLng latlng = bikePosition.getLatLng();
+            String positionName = bikePosition.getPositionName();
+            int bikeNum = bikeNumList[bikePosition.ordinal()];
+
+            Point point = new Point(latlng, positionName, bikeNumList[bikePosition.ordinal()]);
+            Marker marker = aMap.addMarker(new MarkerOptions()
+                    .position(latlng)
+                    .title("共享单车" + positionName)
+                    .snippet("数量：" + bikeNum)
+                    .draggable(true));
+            point.setMarker(marker);
+
+            points.add(point);
+            markers.add(marker);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i("shit",Thread.currentThread().getName());
@@ -133,227 +161,76 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         }
 
         //获取各点信息
-        this.initData((info) -> {
-            Log.i("nb", Thread.currentThread().getName());
-            int westNum = 0 ,southNum = 0,stadiumNum = 0,east1Num = 0,east2Num = 0;
-            bikeInfos = info;
-            System.out.println(bikeInfos);
-            for(BikeInfo bikeInfo:bikeInfos){
-                if (bikeInfo.getCurrentLocation().equals("西门") && bikeInfo.isAvailable()){
-                    westNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("体育场") && bikeInfo.isAvailable()){
-                    stadiumNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("南门") && bikeInfo.isAvailable()){
-                    southNum ++;
-                }else if(bikeInfo.getCurrentLocation().equals("东一门") && bikeInfo.isAvailable()){
-                    east1Num ++;
-                }else if(bikeInfo.getCurrentLocation().equals("东二门") && bikeInfo.isAvailable()){
-                    east2Num ++;
-                }
-            }
+        this.updateData();
 
-            // 添加点到列表
-            LatLng latLng1 = new LatLng(39.95133, 116.336834);
-            Marker marker1 = aMap.addMarker(new MarkerOptions()
-                    .position(latLng1)
-                    .title("共享单车西门")
-                    .snippet("数量：" + westNum)
-                    .draggable(true));
-            Point point1 = new Point(latLng1, "西门", westNum);
-            point1.setMarker(marker1);
-            points.add(point1);
-            markers.add(marker1);
+        initListeners();
 
-            LatLng latLng2 = new LatLng(39.952132,116.340084);
-            Marker marker2 = aMap.addMarker(new MarkerOptions()
-                    .position(latLng2)
-                    .title("共享单车体育场")
-                    .snippet("数量：" + stadiumNum)
-                    .draggable(true));
-            Point point2 = new Point(latLng2, "体育场", stadiumNum);
-            point1.setMarker(marker2);
-            points.add(point2);
-            markers.add(marker2);
+        initFences();
+    }
 
-            LatLng latLng3 = new LatLng(39.94922,116.341495);
-            Marker marker3 = aMap.addMarker(new MarkerOptions()
-                    .position(latLng3)
-                    .title("共享单车南门")
-                    .snippet("数量：" + southNum)
-                    .draggable(true));
-            Point point3 = new Point(latLng3, "南门", southNum);
-            point1.setMarker(marker3);
-            points.add(point3);
-            markers.add(marker3);
-
-            LatLng latLng4 = new LatLng(39.952587,116.343882);
-            Marker marker4 = aMap.addMarker(new MarkerOptions()
-                    .position(latLng4)
-                    .title("共享单车东一门")
-                    .snippet("数量：" + east1Num)
-                    .draggable(true));
-            Point point4 = new Point(latLng4, "东一门", east1Num);
-            point1.setMarker(marker4);
-            points.add(point4);
-            markers.add(marker4);
-
-            LatLng latLng5 = new LatLng(39.95253,116.347691);
-            Marker marker5 = aMap.addMarker(new MarkerOptions()
-                    .position(latLng5)
-                    .title("共享单车东二门")
-                    .snippet("数量：" + east2Num)
-                    .draggable(true));
-            Point point5 = new Point(latLng1, "东二门", east2Num);
-            point1.setMarker(marker5);
-            points.add(point5);
-            markers.add(marker5);
-
+    private void initListeners() {
+        aMap.setOnInfoWindowClickListener(marker -> {
+            // 在这里添加处理点击 InfoWindow 的逻辑
+            String title = marker.getTitle();
+            String snippet = marker.getSnippet();
+            // 在这里处理点击 InfoWindow 后的操作，比如显示更详细的信息等
         });
 
 
+        drawButton.setOnClickListener(v -> {
+            LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
+            for (Point point : points) {
+                //判断是否在范围内
+                if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
 
-
-        aMap.setOnInfoWindowClickListener(new AMap.OnInfoWindowClickListener() {
-            @Override
-            public void onInfoWindowClick(Marker marker) {
-                // 在这里添加处理点击 InfoWindow 的逻辑
-                String title = marker.getTitle();
-                String snippet = marker.getSnippet();
-                // 在这里处理点击 InfoWindow 后的操作，比如显示更详细的信息等
-            }
-        });
-
-
-
-
-        drawButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
-                for (Point point : points) {
-                    //判断是否在范围内
-                    if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
-
-                        if (!isDrawing) {
-                            //这个状态是还没有解锁，把按钮上的内容变成停车
-                            drawButton.setText("停车");
-                            //显示报修按钮
-                            repairButton.setVisibility(View.VISIBLE);
-                            //获取借车人信息
-                            String userId = loginUsername;
-                            //借走车辆
-                            //获取地点
-                            String currentLocation = point.getTitle();
-                            int bicycleId = 0;
-                            for(BikeInfo bikeInfo:bikeInfos){
-                                //System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
-                                if(bikeInfo.getCurrentLocation().equals(currentLocation) && bikeInfo.isAvailable()){
-                                    bicycleId = bikeInfo.getId();
-                                    break;
-                                    //获取第一个符合条件的车
-                                }
+                    if (!isDrawing) {
+                        //这个状态是还没有解锁，把按钮上的内容变成停车
+                        drawButton.setText("停车");
+                        //显示报修按钮
+                        repairButton.setVisibility(View.VISIBLE);
+                        //获取借车人信息
+                        String userId = loginUsername;
+                        //借走车辆
+                        //获取地点
+                        BikePosition currentLocation = BikePosition.valueOf(point.getTitle());
+                        int bicycleId = 0;
+                        for(BikeInfo bikeInfo:bikeInfos){
+                            //System.out.println("!!!!!!" + bikeInfo.getCurrentLocation() + "!!!!!!");
+                            if(bikeInfo.getCurrentLocation() == currentLocation && bikeInfo.isAvailable()){
+                                bicycleId = bikeInfo.getId();
+                                break;
+                                //获取第一个符合条件的车
                             }
-                            int finalBicycleId = bicycleId;
-                            //获取时间戳
-                            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-                            String date = df.format(new Date());
-                            String rideBikeUrl = "http://172.25.104.246:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
-                            Thread t = new Thread(() -> {
-                                try {
-                                    OkHttpClient client = new OkHttpClient();
-                                    RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
-                                    Request request = new Request.Builder()
-                                            .url(rideBikeUrl)
-                                            .post(body)
-                                            .build();
-                                    try(Response response = client.newCall(request).execute()){
-                                        //只是调用接口
-                                    }catch (Exception e){
-                                        System.out.println(e);
-                                    }
+                        }
+                        int finalBicycleId = bicycleId;
+                        //获取时间戳
+                        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
+                        String date = df.format(new Date());
+                        String rideBikeUrl = "http://172.25.104.246:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
+                        Thread t = new Thread(() -> {
+                            try {
+                                OkHttpClient client = new OkHttpClient();
+                                RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
+                                Request request = new Request.Builder()
+                                        .url(rideBikeUrl)
+                                        .post(body)
+                                        .build();
+                                try(Response response = client.newCall(request).execute()){
+                                    //只是调用接口
                                 }catch (Exception e){
                                     System.out.println(e);
                                 }
-
-                            });
-                            t.start();
-                            Toast.makeText(MainActivity.this, "借车成功!", Toast.LENGTH_SHORT).show();
-                            point.setQuantity(point.getQuantity() - 1);
-                            trackPoints = new ArrayList<>();
-                            isDrawing=true;
-                        } else {
-                            //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
-                            drawButton.setText("解锁");
-                            repairButton.setVisibility(View.GONE);
-                            //获取地点
-                            String currentLocation = point.getTitle();
-                            //获取骑车用户信息
-                            String userId = loginUsername;
-                            //获取时间戳
-                            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
-                            String date = df.format(new Date());
-                            String returnBikeUrl = "http://172.25.104.246:8030/returnBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
-                            Thread t = new Thread(() -> {
-                                try{
-                                    OkHttpClient client = new OkHttpClient();
-                                    RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
-                                    Request request = new Request.Builder()
-                                            .url(returnBikeUrl)
-                                            .post(body)
-                                            .build();
-                                    try(Response response = client.newCall(request).execute()){
-                                        //只是调用接口
-                                    }catch (Exception e){
-                                        System.out.println(e);
-                                    }
-                                }catch (Exception e){
-                                    System.out.println(e);
-                                }
-                            });
-                            t.start();
-                            Toast.makeText(MainActivity.this, "还车成功!", Toast.LENGTH_SHORT).show();
-                            point.setQuantity(point.getQuantity() + 1);
-                            // 执行停止轨迹的操作
-                            if (polyline != null) {
-                                polyline.remove();
-                                polyline=null;
+                            }catch (Exception e){
+                                System.out.println(e);
                             }
-                            isDrawing=false;
-                        }
 
-                        // 更新标记和信息窗口
-                        Marker marker = getMarkerByPoint(point);
-                        if (marker != null) {
-                            marker.setSnippet("数量：" + point.getQuantity());
-                            marker.showInfoWindow();
-                        }
-                        isPointProcessed = true;
-                        break; // 结束循环，只处理第一个满足条件的点
-                    }
-                }
-
-                // 如果不在任何点附近
-                if (!isPointProcessed) {
-                    Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-
-        centerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                centerMap();
-            }
-        });
-
-        repairButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
-                for (Point point : points) {
-                    //判断是否在范围内
-                    if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
+                        });
+                        t.start();
+                        Toast.makeText(MainActivity.this, "借车成功!", Toast.LENGTH_SHORT).show();
+                        point.setQuantity(point.getQuantity() - 1);
+                        trackPoints = new ArrayList<>();
+                        isDrawing=true;
+                    } else {
                         //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
                         drawButton.setText("解锁");
                         repairButton.setVisibility(View.GONE);
@@ -364,13 +241,13 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                         //获取时间戳
                         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                         String date = df.format(new Date());
-                        String repairBikeUrl = "http://172.25.104.246:8030/repairBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                        String returnBikeUrl = "http://172.25.104.246:8030/returnBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
                         Thread t = new Thread(() -> {
                             try{
                                 OkHttpClient client = new OkHttpClient();
                                 RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
                                 Request request = new Request.Builder()
-                                        .url(repairBikeUrl)
+                                        .url(returnBikeUrl)
                                         .post(body)
                                         .build();
                                 try(Response response = client.newCall(request).execute()){
@@ -383,34 +260,96 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             }
                         });
                         t.start();
-                        Toast.makeText(MainActivity.this, "报修成功!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "还车成功!", Toast.LENGTH_SHORT).show();
+                        point.setQuantity(point.getQuantity() + 1);
                         // 执行停止轨迹的操作
                         if (polyline != null) {
                             polyline.remove();
                             polyline=null;
                         }
                         isDrawing=false;
-
-                        // 更新标记和信息窗口
-                        Marker marker = getMarkerByPoint(point);
-                        if (marker != null) {
-                            marker.setSnippet("数量：" + point.getQuantity());
-                            marker.showInfoWindow();
-                        }
-                        isPointProcessed = true;
-                        break; // 结束循环，只处理第一个满足条件的点
                     }
-                }
-                // 如果不在任何点附近
-                if (!isPointProcessed) {
-                    Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
-                }
 
+                    // 更新标记和信息窗口
+                    Marker marker = getMarkerByPoint(point);
+                    if (marker != null) {
+                        marker.setSnippet("数量：" + point.getQuantity());
+                        marker.showInfoWindow();
+                    }
+                    isPointProcessed = true;
+                    break; // 结束循环，只处理第一个满足条件的点
+                }
+            }
+
+            // 如果不在任何点附近
+            if (!isPointProcessed) {
+                Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
             }
         });
 
 
+        centerButton.setOnClickListener(v -> centerMap());
 
+        repairButton.setOnClickListener(v -> {
+            LatLng currentPosition = new LatLng(lastLocation.latitude, lastLocation.longitude);
+            for (Point point : points) {
+                //判断是否在范围内
+                if (isNearbyPoint(currentPosition, point.getLatLng(), 50)) {
+                    //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
+                    drawButton.setText("解锁");
+                    repairButton.setVisibility(View.GONE);
+                    //获取地点
+                    String currentLocation = point.getTitle();
+                    //获取骑车用户信息
+                    String userId = loginUsername;
+                    //获取时间戳
+                    String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    String repairBikeUrl = "http://172.25.104.246:8030/repairBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                    Thread t = new Thread(() -> {
+                        try{
+                            OkHttpClient client = new OkHttpClient();
+                            RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));
+                            Request request = new Request.Builder()
+                                    .url(repairBikeUrl)
+                                    .post(body)
+                                    .build();
+                            try(Response response = client.newCall(request).execute()){
+                                //只是调用接口
+                            }catch (Exception e){
+                                System.out.println(e);
+                            }
+                        }catch (Exception e){
+                            System.out.println(e);
+                        }
+                    });
+                    t.start();
+                    Toast.makeText(MainActivity.this, "报修成功!", Toast.LENGTH_SHORT).show();
+                    // 执行停止轨迹的操作
+                    if (polyline != null) {
+                        polyline.remove();
+                        polyline=null;
+                    }
+                    isDrawing=false;
+
+                    // 更新标记和信息窗口
+                    Marker marker = getMarkerByPoint(point);
+                    if (marker != null) {
+                        marker.setSnippet("数量：" + point.getQuantity());
+                        marker.showInfoWindow();
+                    }
+                    isPointProcessed = true;
+                    break; // 结束循环，只处理第一个满足条件的点
+                }
+            }
+            // 如果不在任何点附近
+            if (!isPointProcessed) {
+                Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
+            }
+
+        });
+    }
+
+    private void initFences() {
         // 初始化地理围栏客户端
         mGeoFenceClient = new GeoFenceClient(getApplicationContext());
         mGeoFenceClient.setGeoFenceListener(this);
@@ -437,17 +376,18 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         fencePoints.add(new DPoint(39.954525, 116.339602));
 
         // 创建围栏
-        createGeoFence();
-    }
+        fencePoints.size();
+        PolygonOptions polygonOptions = new PolygonOptions();
+        for (DPoint point : fencePoints) {
+            polygonOptions.add(new LatLng(point.getLatitude(), point.getLongitude()));
+        }
+        aMap.addPolygon(polygonOptions.strokeColor(Color.RED).fillColor(Color.argb(100, 255, 0, 0)));
 
-    //创建获取数据接口
-    interface i {
-        public void f(List<BikeInfo> info);
+        mGeoFenceClient.addGeoFence(fencePoints, "自有业务ID");
     }
 
     //获取共享单车数据
-    private void initData(i ii){
-
+    private void updateData(){
         Thread t = new Thread(() -> {
             Log.i("shitNetwork",Thread.currentThread().getName());
             String getBikeUrl = "http://172.25.104.246:8030/getBikeInfo";
@@ -457,12 +397,16 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                         .url(getBikeUrl)
                         .build();
                 try(Response response = client.newCall(request).execute()){
+                    assert response.body() != null;
                     JSONArray bikeList = new JSONArray(response.body().string());
                     String bikeJson = bikeList.toString();
                     //System.out.println("!!!!!" + bikeList + "!!!!!");
                     Gson gson = new Gson();
-                    List<BikeInfo> bikeInfos1 = gson.fromJson(bikeJson,new TypeToken<List<BikeInfo>>(){}.getType());
-                    ii.f(bikeInfos1);
+                    List<BikeInfo> bikeInfoList = gson.fromJson(bikeJson,new TypeToken<List<BikeInfo>>(){}.getType());
+                    synchronized (this) {
+                        this.bikeInfos = bikeInfoList;
+                    }
+                    MainActivity.this.runOnUiThread(this::updateMap);
                 }catch (Exception e){
                     System.out.println(e);
                 }
@@ -657,18 +601,6 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         double x = p1x + (py - p1y) * (p2x - p1x) / (p2y - p1y);
 
         return x > px;
-    }
-
-    private void createGeoFence() {
-        if (fencePoints != null && fencePoints.size() >= 3) {
-            PolygonOptions polygonOptions = new PolygonOptions();
-            for (DPoint point : fencePoints) {
-                polygonOptions.add(new LatLng(point.getLatitude(), point.getLongitude()));
-            }
-            aMap.addPolygon(polygonOptions.strokeColor(Color.RED).fillColor(Color.argb(100, 255, 0, 0)));
-
-            mGeoFenceClient.addGeoFence(fencePoints, "自有业务ID");
-        }
     }
 
     @Override
