@@ -78,8 +78,8 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
     private LatLng lastLocation;
     private Button drawButton;
     private Button centerButton;
-
     private Button repairButton;
+    private Button donateButton;
 
     private boolean isDrawing = false;
     private boolean isCentered = false;
@@ -90,6 +90,10 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
     private boolean isAlerted = false;
     private GeoFenceClient mGeoFenceClient;
 
+
+    //里程数
+    private int totalDistance = 0;
+    private TextView distance;
 
     private ArrayList<Point> points = new ArrayList<>();
     private List<Marker> markers = new ArrayList<>();
@@ -126,6 +130,10 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         drawButton = findViewById(R.id.btn_draw);
         centerButton = findViewById(R.id.btn_center);
         repairButton = findViewById(R.id.btn_repair);
+        donateButton = findViewById(R.id.btn_donate);
+
+        //初始化里程数
+        distance = findViewById(R.id.rdistance);
 
         // 请求定位权限
         try {
@@ -143,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
             bikeInfos = info;
             System.out.println(bikeInfos);
             for(BikeInfo bikeInfo:bikeInfos){
+                System.out.println(bikeInfo.toString());
                 if (bikeInfo.getCurrentLocation().equals("西门") && bikeInfo.isAvaliable()){
                     westNum ++;
                 }else if(bikeInfo.getCurrentLocation().equals("体育场") && bikeInfo.isAvaliable()){
@@ -153,10 +162,15 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     east1Num ++;
                 }else if(bikeInfo.getCurrentLocation().equals("东二门") && bikeInfo.isAvaliable()){
                     east2Num ++;
+                }else if(bikeInfo.getCurrentLocation().equals("新车")){
+                    System.out.println("新车，没位置");
+                }else{
+                    System.out.println("不可用车辆");
                 }
             }
 
             // 添加点到列表
+            System.out.println("开始添加点位");
             LatLng latLng1 = new LatLng(39.95133, 116.336834);
             Marker marker1 = aMap.addMarker(new MarkerOptions()
                     .position(latLng1)
@@ -211,7 +225,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
             point1.setMarker(marker5);
             points.add(point5);
             markers.add(marker5);
-
+            System.out.println("添加点位成功");
         });
 
 
@@ -242,7 +256,9 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             //这个状态是还没有解锁，把按钮上的内容变成停车
                             drawButton.setText("停车");
                             //显示报修按钮
+                            //取消显示捐赠按钮
                             repairButton.setVisibility(View.VISIBLE);
+                            donateButton.setVisibility(View.GONE);
                             //获取借车人信息
                             String userId = loginUsername;
                             //借走车辆
@@ -288,7 +304,9 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                         } else {
                             //这个状态是正在骑行，按下后将取消骑行，所以将text设置为解锁
                             drawButton.setText("解锁");
+                            //显示捐赠按钮，取消显示报修按钮
                             repairButton.setVisibility(View.GONE);
+                            donateButton.setVisibility(View.VISIBLE);
                             //获取地点
                             String currentLocation = point.getTitle();
                             //获取骑车用户信息
@@ -322,6 +340,8 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                                 polyline.remove();
                                 polyline=null;
                             }
+                            totalDistance = 0;
+                            distance.setText("里程数：0m" );
                             isDrawing=false;
                         }
 
@@ -410,6 +430,30 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                     Toast.makeText(MainActivity.this, "您不在停车点附近，无法操作", Toast.LENGTH_SHORT).show();
                 }
 
+            }
+        });
+
+        donateButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                String donateUrl = "http://172.25.104.246:8030/donateBike";
+                Thread t = new Thread(() -> {
+                    try {
+                        OkHttpClient client = new OkHttpClient();
+                        Request request = new Request.Builder()
+                                .url(donateUrl)
+                                .build();
+                        try(Response response = client.newCall(request).execute()){
+                            //只是调用接口
+                        }catch (Exception e){
+                            System.out.println(e);
+                        }
+                    }catch (Exception e){
+                        System.out.println(e);
+                    }
+                });
+                t.start();
+                Toast.makeText(MainActivity.this, "捐赠成功！", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -589,6 +633,22 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
 
                 trackPoints.add(latLng);
                 polyline.setPoints(trackPoints);
+
+                // 计算当前点与上一个点之间的距离
+                if (trackPoints.size() > 1) {
+                    LatLng lastPosition = trackPoints.get(trackPoints.size() - 2);
+                    LatLng currentPosition = trackPoints.get(trackPoints.size() - 1);
+                    float[] results = new float[1];
+                    Location.distanceBetween(lastPosition.latitude, lastPosition.longitude, currentPosition.latitude, currentPosition.longitude, results);
+                    float distance = results[0];
+
+                    totalDistance += distance; // 累加距离
+                }
+
+                // 其他绘制轨迹的代码...
+
+                // 更新已走里程数
+                distance.setText("里程：" + totalDistance + " 米");
 
                 if (isCentered) {
                     // 将地图中心移动到定位点

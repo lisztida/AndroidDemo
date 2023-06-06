@@ -21,12 +21,34 @@
             android:textSize="20dp" />
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/distanceLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/userLayout">
+
+        <TextView
+            android:id="@+id/rdistance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="distance"
+            android:textColor="@color/black"
+            android:textSize="20dp" />
+    </LinearLayout>
+
+
+
     <com.amap.api.maps2d.MapView
         android:id="@+id/map"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="383dp"
+        android:layout_height="wrap_content"
         android:layout_above="@+id/buttonsLayout"
-        android:layout_below="@+id/userLayout"/>
+        android:layout_below="@+id/distanceLayout"
+        >
+
+
+    </com.amap.api.maps2d.MapView>
 
     <LinearLayout
         android:id="@+id/buttonsLayout"
@@ -57,6 +79,12 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             android:text="报修" />
+
+        <Button
+            android:id="@+id/btn_donate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="捐赠" />
 
     </LinearLayout>
 
