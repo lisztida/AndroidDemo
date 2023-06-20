@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -11,6 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Map"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <service android:name="com.amap.api.location.APSService" android:enabled="true"
             android:exported="false" />
@@ -60,5 +63,11 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!--如果您的应用需要后台定位权限，且有可能运行在Android Q设备上,并且设置了target>28，必须增加这个权限声明-->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+    <!--蓝牙权限-->
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+
 
 </manifest>

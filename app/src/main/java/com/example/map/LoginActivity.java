@@ -2,6 +2,7 @@ package com.example.map;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,6 +20,7 @@ import okhttp3.Response;
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
     private Button login;
     private EditText name,password;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,13 +40,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View v) {
-
         Thread t = new Thread(() -> {
             int id = v.getId();
             if (id == R.id.login) {
                 String edusername = name.getText().toString();
                 String edpassword = password.getText().toString();
-                String sendUrl = "http://172.25.104.246:8030/login?username="+edusername+"&password="+edpassword;
+                String sendUrl = "http://192.168.10.23:8030/login?username="+edusername+"&password="+edpassword;
                 try {
                     OkHttpClient client = new OkHttpClient();
                     RequestBody body = RequestBody.create("{\"username\":\"aaa\", \"password\":\"as\"}", MediaType.get("application/json; charset=utf-8"));

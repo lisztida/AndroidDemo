@@ -277,7 +277,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             //获取时间戳
                             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                             String date = df.format(new Date());
-                            String rideBikeUrl = "http://172.25.104.246:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
+                            String rideBikeUrl = "http://192.168.10.23:8030/rideBike?id=" + finalBicycleId + "&userId=" + userId + "&rentalTime=" + date;
                             Thread t = new Thread(() -> {
                                 try {
                                     OkHttpClient client = new OkHttpClient();
@@ -314,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                             //获取时间戳
                             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                             String date = df.format(new Date());
-                            String returnBikeUrl = "http://172.25.104.246:8030/returnBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                            String returnBikeUrl = "http://192.168.10.23:8030/returnBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
                             Thread t = new Thread(() -> {
                                 try{
                                     OkHttpClient client = new OkHttpClient();
@@ -388,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
                         //获取时间戳
                         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置日期格式
                         String date = df.format(new Date());
-                        String repairBikeUrl = "http://172.25.104.246:8030/repairBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
+                        String repairBikeUrl = "http://192.168.10.23:8030/repairBike?userId=" + userId + "&returnTime=" + date + "&currentLocation=" + currentLocation;
                         Thread t = new Thread(() -> {
                             try{
                                 OkHttpClient client = new OkHttpClient();
@@ -436,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
         donateButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                String donateUrl = "http://172.25.104.246:8030/donateBike";
+                String donateUrl = "http://192.168.10.23:8030/donateBike";
                 Thread t = new Thread(() -> {
                     try {
                         OkHttpClient client = new OkHttpClient();
@@ -498,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements AMapLocationListe
 
         Thread t = new Thread(() -> {
             Log.i("shitNetwork",Thread.currentThread().getName());
-            String getBikeUrl = "http://172.25.104.246:8030/getBikeInfo";
+            String getBikeUrl = "http://192.168.10.23:8030/getBikeInfo";
             try{
                 OkHttpClient client = new OkHttpClient();
                 Request request = new Request.Builder()
